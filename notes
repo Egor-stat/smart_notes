@@ -1,0 +1,102 @@
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+import json
+app = QApplication([])
+window = QWidget()
+window.resize(800, 500)
+window.setWindowTitle("Умные заметки")
+note_layout = QVBoxLayout()
+parametres_layout = QVBoxLayout()
+parametres_layoutH = QHBoxLayout()
+parametres_layoutH1 = QHBoxLayout()
+main_layout = QHBoxLayout()
+save_note1 = QPushButton("Сохранить заметку")
+create_note = QPushButton("Создать заметку")
+delete_note = QPushButton("Удалить заметку")
+append_note = QPushButton("Добавить к заметке")
+remove_note = QPushButton("Открепить от заметки")
+find_note = QPushButton("Искать заметки по тегу")
+list_of_notes = QListWidget()
+teg = QLineEdit()
+teg.setPlaceholderText("Введите тег...")
+teg.setFixedSize(350, 20)
+list_of_notes.setFixedSize(350, 120)
+list_of_tegs = QListWidget()
+list_of_tegs.setFixedSize(350, 120)
+note = QTextEdit()
+note.setFixedSize(400, 500)
+name_list_of_notes = QLabel("Список заметок")
+name_list_of_tegs = QLabel("Список тегов")
+notes = {
+    "Добро пожаловать": {
+        "текст": "В этом приложении можно создавать заметки с тегами...",
+        "теги": ["умные заметки", "инструкция"]
+    }
+}
+with open("notes_data.json", "w") as file:
+    json.dump(notes, file)
+def add_note():
+    note_name, result = QInputDialog.getText(
+        window, "Добавить заметку", "Название заметки:"
+    )
+    if result:
+        notes[note_name] = {
+            "текст": "",
+            "теги": []
+        }
+        with open("notes_data.json", "w", encoding="utf-8") as file:
+            json.dump(notes, file)
+        with open("notes_data.json", "r", encoding="utf-8") as file:
+            data = json.load(file)
+        list_of_notes.clear()
+        list_of_notes.addItems(data)
+        note.setText(notes[note_name]["текст"])
+        list_of_tegs.clear()
+        list_of_tegs.addItems(notes[note_name]["теги"])
+def del_note():
+    name = list_of_notes.selectedItems()[0].text()
+    del notes[name]
+    with open("notes_data.json", "w", encoding="utf-8") as file:
+        json.dump(notes, file)
+    with open("notes_data.json", "r", encoding="utf-8") as file:
+        data = json.load(file)
+    list_of_notes.clear()
+    list_of_notes.addItems(data)
+def save_note():
+    name = list_of_notes.selectedItems()[0].text()
+    text = note.toPlainText()
+    del notes[name]["текст"]
+    notes[name]["текст"] = text
+    with open("notes_data.json", "w", encoding="utf-8") as file:
+        json.dump(notes, file)
+note_layout.addWidget(note, alignment=Qt.AlignCenter)
+parametres_layout.addWidget(name_list_of_notes, alignment=Qt.AlignLeft)
+parametres_layout.addWidget(list_of_notes, alignment=Qt.AlignCenter)
+parametres_layoutH1.addWidget(create_note, stretch=2)
+parametres_layoutH1.addWidget(delete_note, stretch=2)
+parametres_layout.addLayout(parametres_layoutH1)
+parametres_layout.addWidget(save_note1, stretch=3)
+parametres_layout.addWidget(name_list_of_tegs, alignment=Qt.AlignLeft)
+parametres_layout.addWidget(list_of_tegs, alignment=Qt.AlignCenter)
+parametres_layout.addWidget(teg, alignment=Qt.AlignCenter)
+parametres_layoutH.addWidget(append_note, stretch=2)
+parametres_layoutH.addWidget(remove_note, stretch=2)
+parametres_layout.addLayout(parametres_layoutH)
+parametres_layout.addWidget(find_note, stretch=3)
+main_layout.addLayout(note_layout)
+main_layout.addLayout(parametres_layout)
+window.setLayout(main_layout)
+window.show()
+with open("notes_data.json", "r", encoding="utf-8") as file:
+    data = json.load(file)
+list_of_notes.addItems(data)
+def show_results():
+    name = list_of_notes.selectedItems()[0].text()
+    note.setText(notes[name]["текст"])
+    list_of_tegs.clear()
+    list_of_tegs.addItems(notes[name]["теги"])
+list_of_notes.itemClicked.connect(show_results)
+create_note.clicked.connect(add_note)
+delete_note.clicked.connect(del_note)
+save_note1.clicked.connect(save_note)
+app.exec_()
